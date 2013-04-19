@@ -14,6 +14,7 @@ class MysqlIsolatedServer
     @load_data_path = options[:data_path]
     @port = options[:port]
     @allow_output = options[:allow_output]
+    @server_id = rand(2**31)
   end
 
   def make_slave_of(master)
@@ -72,9 +73,8 @@ class MysqlIsolatedServer
     tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
     raise "could not find mysql_tzinfo_to_sql" unless tzinfo_to_sql
     system("#{tzinfo_to_sql} /usr/share/zoneinfo 2>/dev/null | mysql -h127.0.0.1 --database=mysql --port=#{@port} -u root mysql ")
-
-    system(%Q(mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e "SET GLOBAL time_zone='UTC'"))
-    system(%Q(mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e "GRANT SELECT ON *.* to 'zdslave'@'localhost'"))
+    connection.query("SET GLOBAL time_zone='UTC'")
+    connection.query("SET GLOBAL server_id=#{@server_id}")
   end
 
   def grab_free_port
