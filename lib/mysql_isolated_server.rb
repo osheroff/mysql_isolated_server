@@ -28,6 +28,7 @@ class MysqlIsolatedServer
       EOL
     )
     connection.query("SLAVE START")
+    connection.query("SET GLOBAL READ_ONLY=1")
   end
 
   def connection
