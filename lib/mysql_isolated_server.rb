@@ -64,6 +64,7 @@ class MysqlIsolatedServer
     while (Process.kill 0, @pid rescue false)
       sleep 1
     end
+    @cx = nil
   end
 
   def boot!
@@ -122,7 +123,7 @@ class MysqlIsolatedServer
     end
     Thread.new { Process.wait(pid) }
     at_exit {
-      Process.kill("TERM", pid)
+      Process.kill("TERM", pid) rescue nil
       system("rm -Rf #{base}")
     }
     @pid = pid
