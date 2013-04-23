@@ -47,6 +47,25 @@ class MysqlIsolatedServer
     output.split("\n").first
   end
 
+  def up!
+    exec_server <<-EOL
+        mysqld --no-defaults --default-storage-engine=innodb \
+                --datadir=#{@mysql_data_dir} --pid-file=#{@base}/mysqld.pid --port=#{@port} \
+                #{@params} --socket=#{@mysql_data_dir}/mysql.sock --log-bin --log-slave-updates
+    EOL
+
+    while !system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
+      sleep(0.1)
+    end
+  end
+
+  def down!
+    Process.kill("TERM", @pid)
+    while (Process.kill 0, @pid rescue false)
+      sleep 1
+    end
+  end
+
   def boot!
     @port ||= grab_free_port
     system("rm -Rf #{@mysql_data_dir}")
@@ -61,15 +80,7 @@ class MysqlIsolatedServer
       system("cp #{File.expand_path(File.dirname(__FILE__))}/tables/user.* #{@mysql_data_dir}/mysql")
     end
 
-    exec_server <<-EOL
-        mysqld --no-defaults --default-storage-engine=innodb \
-                --datadir=#{@mysql_data_dir} --pid-file=#{@base}/mysqld.pid --port=#{@port} \
-                #{@params} --socket=#{@mysql_data_dir}/mysql.sock --log-bin --log-slave-updates
-    EOL
-
-    while !system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
-      sleep(0.1)
-    end
+    up!
 
     tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
     raise "could not find mysql_tzinfo_to_sql" unless tzinfo_to_sql
@@ -109,6 +120,7 @@ class MysqlIsolatedServer
 
       exec(cmd)
     end
+    Thread.new { Process.wait(pid) }
     at_exit {
       Process.kill("TERM", pid)
       system("rm -Rf #{base}")
