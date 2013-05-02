@@ -112,22 +112,51 @@ class MysqlIsolatedServer
     devnull = File.open("/dev/null", "w")
     system("mkdir -p #{base}/tmp")
     system("chmod 0777 #{base}/tmp")
-    pid = fork do
-      ENV["TMPDIR"] = "#{base}/tmp"
-      if !@allow_output
-        STDOUT.reopen(devnull)
-        STDERR.reopen(devnull)
+
+    original_pid = $$
+    mysql_pid = nil
+
+    middle_pid = fork do
+      mysql_pid = fork do
+        ENV["TMPDIR"] = "#{base}/tmp"
+        if !@allow_output
+          STDOUT.reopen(devnull)
+          STDERR.reopen(devnull)
+        end
+
+        exec(cmd)
       end
 
-      exec(cmd)
+      # begin waiting for the parent (or mysql) to die; at_exit is hard to control when interacting with test/unit
+      # we can also be killed by our parent with down! and up!
+      #
+      trap("TERM") do
+        Process.kill("KILL", mysql_pid) rescue nil
+        cleanup!
+        exit!
+      end
+
+      while true
+        begin
+          Process.kill(0, original_pid)
+          Process.kill(0, mysql_pid)
+        rescue Exception => e
+          Process.kill("KILL", mysql_pid) rescue nil
+          cleanup!
+          exit!
+        end
+
+        sleep 1
+      end
+
+      at
     end
-    Thread.new { Process.wait(pid) }
-    at_exit {
-      Process.kill("TERM", pid) rescue nil
-      system("rm -Rf #{base}")
-    }
-    @pid = pid
-    devnull.close
+
+    @pid = middle_pid
+  end
+
+  def cleanup!
+    system("rm -Rf #{base}")
   end
 
   def kill!
