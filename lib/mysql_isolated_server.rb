@@ -43,13 +43,15 @@ class MysqlIsolatedServer
 
   def locate_executable(*candidates)
     output = `which #{candidates.join(' ')}`
-    return nil if output == "\n"
+    raise "I couldn't find any of these: #{candidates.join(',')} in $PATH" if output.chomp.empty?
     output.split("\n").first
   end
 
   def up!
+    mysqld = locate_executable("mysqld")
+
     exec_server <<-EOL
-        mysqld --no-defaults --default-storage-engine=innodb \
+        #{mysqld} --no-defaults --default-storage-engine=innodb \
                 --datadir=#{@mysql_data_dir} --pid-file=#{@base}/mysqld.pid --port=#{@port} \
                 #{@params} --socket=#{@mysql_data_dir}/mysql.sock --log-bin --log-slave-updates
     EOL
@@ -75,7 +77,8 @@ class MysqlIsolatedServer
       system("cp -a #{@load_data_path}/* #{@mysql_data_dir}")
       system("rm -f #{@mysql_data_dir}/relay-log.info")
     else
-      mysql_install_db = `which mysql_install_db`
+      mysql_install_db = locate_executable("mysql_install_db")
+
       idb_path = File.dirname(mysql_install_db)
       system("(cd #{idb_path}/..; mysql_install_db --datadir=#{@mysql_data_dir} --user=`whoami`) >/dev/null 2>&1")
       system("cp #{File.expand_path(File.dirname(__FILE__))}/tables/user.* #{@mysql_data_dir}/mysql")
