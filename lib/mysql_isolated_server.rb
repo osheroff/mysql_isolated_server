@@ -4,6 +4,7 @@ require 'mysql2'
 
 class MysqlIsolatedServer
   attr_reader :pid, :base, :port
+  attr_accessor :params
   MYSQL_BASE_DIR="/usr"
 
   def initialize(options = {})
