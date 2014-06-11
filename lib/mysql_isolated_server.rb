@@ -1,21 +1,54 @@
 require 'tmpdir'
 require 'socket'
-require 'mysql2'
+
+if RUBY_PLATFORM == "java"
+  require 'mysql_isolated_server/jdbc_connection'
+else
+  require 'mysql_isolated_server/mysql2_connection'
+end
 
 class MysqlIsolatedServer
+  include DBConnection
   attr_reader :pid, :base, :port
   attr_accessor :params
   MYSQL_BASE_DIR="/usr"
 
   def initialize(options = {})
-    @base = Dir.mktmpdir("mysql_isolated", "/tmp")
+    @base = options[:base] || Dir.mktmpdir("mysql_isolated", "/tmp")
     @mysql_data_dir="#{@base}/mysqld"
     @mysql_socket="#{@mysql_data_dir}/mysqld.sock"
     @params = options[:params]
     @load_data_path = options[:data_path]
     @port = options[:port]
     @allow_output = options[:allow_output]
+    @log_bin = options[:log_bin] || "--log-bin"
+    @parent_pid = options[:pid]
     @server_id = rand(2**31)
+  end
+
+  def self.thread_boot(*params)
+    bin = File.dirname(__FILE__) + "/../bin/boot_isolated_server"
+    mysql_dir, mysql_port = nil, nil
+    restore_env = {}
+
+    Thread.abort_on_exception = true
+    Thread.new do
+      ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
+        restore_env[k] = ENV.delete(k)
+      end
+      params = ["--pid", $$.to_s] + params
+
+      pipe = IO.popen(["#{bin}"].concat(params), "r") do |pipe|
+        mysql_dir = pipe.readline.split(' ').last
+        mysql_port = pipe.readline.split(' ').last.to_i
+        sleep
+      end
+    end
+
+    while mysql_port.nil?
+      sleep 1
+    end
+    new(:port => mysql_port, :base => mysql_dir)
   end
 
   def make_slave_of(master)
@@ -30,10 +63,6 @@ class MysqlIsolatedServer
     )
     connection.query("SLAVE START")
     connection.query("SET GLOBAL READ_ONLY=1")
-  end
-
-  def connection
-    @cx ||= Mysql2::Client.new(:host => "127.0.0.1", :port => @port, :username => "root", :password => "", :database => "mysql")
   end
 
   def set_rw(rw)
@@ -54,7 +83,7 @@ class MysqlIsolatedServer
     exec_server <<-EOL
         #{mysqld} --no-defaults --default-storage-engine=innodb \
                 --datadir=#{@mysql_data_dir} --pid-file=#{@base}/mysqld.pid --port=#{@port} \
-                #{@params} --socket=#{@mysql_data_dir}/mysql.sock --log-bin --log-slave-updates
+                #{@params} --socket=#{@mysql_data_dir}/mysql.sock #{@log_bin} --log-slave-updates
     EOL
 
     while !system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
@@ -85,6 +114,19 @@ class MysqlIsolatedServer
       system("cp #{File.expand_path(File.dirname(__FILE__))}/tables/user.* #{@mysql_data_dir}/mysql")
     end
 
+    if !@log_bin
+      @log_bin = "--log-bin"
+    else
+      if @log_bin[0] != '/'
+        binlog_dir = "#{@mysql_data_dir}/#{@log_bin}"
+      else
+        binlog_dir = @log_bin
+      end
+
+      system("mkdir -p #{binlog_dir}")
+      @log_bin = "--log-bin=#{binlog_dir}"
+    end
+
     up!
 
     tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
@@ -100,7 +142,7 @@ class MysqlIsolatedServer
 
       begin
         socket = Socket.new(:INET, :STREAM, 0)
-        socket.bind(Addrinfo.tcp("127.0.0.1", candidate))
+        socket.bind(Socket.pack_sockaddr_in(candidate, '127.0.0.1'))
         socket.close
         return candidate
       rescue Exception => e
@@ -117,9 +159,10 @@ class MysqlIsolatedServer
     system("mkdir -p #{base}/tmp")
     system("chmod 0777 #{base}/tmp")
 
-    original_pid = $$
+    parent_pid = @parent_pid || $$
     mysql_pid = nil
 
+    $stderr.puts cmd
     middle_pid = fork do
       mysql_pid = fork do
         ENV["TMPDIR"] = "#{base}/tmp"
@@ -134,15 +177,18 @@ class MysqlIsolatedServer
       # begin waiting for the parent (or mysql) to die; at_exit is hard to control when interacting with test/unit
       # we can also be killed by our parent with down! and up!
       #
-      trap("TERM") do
-        Process.kill("KILL", mysql_pid) rescue nil
-        cleanup!
-        exit!
+      ["TERM", "INT"].each do |sig|
+        trap(sig) do
+          Process.kill("KILL", mysql_pid) rescue nil
+          cleanup!
+          exit!
+        end
       end
+
 
       while true
         begin
-          Process.kill(0, original_pid)
+          Process.kill(0, parent_pid)
           Process.kill(0, mysql_pid)
         rescue Exception => e
           Process.kill("KILL", mysql_pid) rescue nil

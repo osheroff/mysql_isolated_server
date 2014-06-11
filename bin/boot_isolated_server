@@ -1,0 +1,30 @@
+#!/usr/bin/ruby
+require 'rubygems'
+$LOAD_PATH << File.dirname(__FILE__) + "/../lib"
+require 'mysql_isolated_server'
+require 'getoptlong'
+
+$stderr.puts ENV.inspect
+opts = GetoptLong.new(
+  [ '--log-bin', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--pid', GetoptLong::REQUIRED_ARGUMENT ]
+)
+
+options = {}
+opts.each do |opt, arg|
+  case opt
+    when '--log-bin'
+      options[:log_bin] = arg
+    when '--pid'
+      options[:pid] = arg.to_i
+    end
+end
+
+options[:params] = ARGV.join(' ')
+
+mysql_isolated_server = MysqlIsolatedServer.new(options)
+mysql_isolated_server.boot!
+
+puts "dir: " + mysql_isolated_server.base
+puts "port: " + mysql_isolated_server.port.to_s
+STDOUT.flush
