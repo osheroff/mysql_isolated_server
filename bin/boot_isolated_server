@@ -4,7 +4,6 @@ $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'mysql_isolated_server'
 require 'getoptlong'
 
-$stderr.puts ENV.inspect
 opts = GetoptLong.new(
   [ '--log-bin', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--pid', GetoptLong::REQUIRED_ARGUMENT ]
