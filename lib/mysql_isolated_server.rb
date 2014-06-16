@@ -162,7 +162,6 @@ class MysqlIsolatedServer
     parent_pid = @parent_pid || $$
     mysql_pid = nil
 
-    $stderr.puts cmd
     middle_pid = fork do
       mysql_pid = fork do
         ENV["TMPDIR"] = "#{base}/tmp"
