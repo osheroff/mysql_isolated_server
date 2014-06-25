@@ -141,13 +141,15 @@ class MysqlIsolatedServer
       candidate=9000 + rand(50_000)
 
       begin
-        socket = Socket.new(:INET, :STREAM)
+        socket = Socket.new(:INET, :STREAM, 0)
         socket.bind(Socket.pack_sockaddr_in(candidate, '127.0.0.1'))
         socket.close
         return candidate
       rescue Exception => e
+        $stderr.puts(RUBY_VERSION)
         $stderr.puts(e)
         $stderr.puts(e.backtrace)
+        raise e
       end
     end
   end
