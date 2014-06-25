@@ -136,12 +136,13 @@ class MysqlIsolatedServer
     connection.query("SET GLOBAL server_id=#{@server_id}")
   end
 
+  include Socket::Constants
   def grab_free_port
     while true
       candidate=9000 + rand(50_000)
 
       begin
-        socket = Socket.new(:INET, :STREAM, 0)
+        socket = Socket.new(AF_INET, SOCK_STREAM, 0)
         socket.bind(Socket.pack_sockaddr_in(candidate, '127.0.0.1'))
         socket.close
         return candidate
