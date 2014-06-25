@@ -146,6 +146,7 @@ class MysqlIsolatedServer
         socket.close
         return candidate
       rescue Exception => e
+        $stderr.puts(e)
       end
     end
   end
