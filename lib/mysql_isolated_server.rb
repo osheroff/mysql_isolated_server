@@ -35,6 +35,7 @@ class MysqlIsolatedServer
     end
     if `which ruby` =~ (/rvm/)
       $stderr.puts(`which ruby`)
+      $stderr.puts(`which rvm`)
       bin = "/usr/local/lib/rvm system #{bin}"
     end
 
