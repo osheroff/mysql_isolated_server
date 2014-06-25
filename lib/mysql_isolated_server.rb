@@ -34,9 +34,7 @@ class MysqlIsolatedServer
     if ENV['TRAVIS'] # oh how ugly
     end
     if `which ruby` =~ (/rvm/)
-      $stderr.puts(`which ruby`)
-      $stderr.puts(`which rvm`)
-      bin = "/usr/local/lib/rvm system #{bin}"
+      bin = (`which rvm`.chomp + " system #{bin}")
     end
 
     Thread.abort_on_exception = true
