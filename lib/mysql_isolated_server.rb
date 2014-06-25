@@ -146,7 +146,6 @@ class MysqlIsolatedServer
         socket.close
         return candidate
       rescue Exception => e
-        puts e
       end
     end
   end
