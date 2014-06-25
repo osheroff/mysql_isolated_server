@@ -1,5 +1,4 @@
 #!/usr/bin/ruby
-require 'rubygems'
 $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'mysql_isolated_server'
 require 'getoptlong'
