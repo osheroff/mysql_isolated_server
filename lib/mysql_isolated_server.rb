@@ -32,7 +32,7 @@ class MysqlIsolatedServer
     restore_env = {}
 
     if `which ruby` =~ (/rvm/)
-      bin = ["rvm", "system", "do", "ruby"] + bin
+      bin = ["rvm", "1.8.7", "do", "ruby"] + bin
     end
 
     params = ["--pid", $$.to_s] + params
