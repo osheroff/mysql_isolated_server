@@ -27,27 +27,22 @@ class MysqlIsolatedServer
   end
 
   def self.thread_boot(*params)
-    bin = File.dirname(__FILE__) + "/../bin/boot_isolated_server"
+    bin = [File.dirname(__FILE__) + "/../bin/boot_isolated_server"]
     mysql_dir, mysql_port = nil, nil
     restore_env = {}
 
-    if ENV['TRAVIS'] # oh how ugly
-    end
     if `which ruby` =~ (/rvm/)
-      params = ["1.8.7", "do", "ruby", bin] + params
-      bin = 'rvm'
+      bin = ["rvm", "system", "do", "ruby"] + bin
     end
+
+    params = ["--pid", $$.to_s] + params
 
     Thread.abort_on_exception = true
     Thread.new do
       ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
         restore_env[k] = ENV.delete(k)
       end
-      params = params + ["--pid", $$.to_s]
-
-      puts params.join(' ')
-
-      pipe = IO.popen(["#{bin}"].concat(params), "r") do |pipe|
+      pipe = IO.popen(bin + params, "r") do |pipe|
         mysql_dir = pipe.readline.split(' ').last
         mysql_port = pipe.readline.split(' ').last.to_i
         sleep
@@ -156,10 +151,6 @@ class MysqlIsolatedServer
         socket.close
         return candidate
       rescue Exception => e
-        $stderr.puts(RUBY_VERSION)
-        $stderr.puts(e)
-        $stderr.puts(e.backtrace)
-        raise e
       end
     end
   end
