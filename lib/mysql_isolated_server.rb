@@ -86,7 +86,7 @@ class MysqlIsolatedServer
                 #{@params} --socket=#{@mysql_data_dir}/mysql.sock #{@log_bin} --log-slave-updates
     EOL
 
-    while !system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
+    while !system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1'")
       sleep(0.1)
     end
   end
