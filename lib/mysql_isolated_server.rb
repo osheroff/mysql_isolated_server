@@ -45,6 +45,8 @@ class MysqlIsolatedServer
       end
       params = params + ["--pid", $$.to_s]
 
+      puts params.join(' ')
+
       pipe = IO.popen(["#{bin}"].concat(params), "r") do |pipe|
         mysql_dir = pipe.readline.split(' ').last
         mysql_port = pipe.readline.split(' ').last.to_i
