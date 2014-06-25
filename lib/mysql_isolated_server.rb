@@ -31,6 +31,10 @@ class MysqlIsolatedServer
     mysql_dir, mysql_port = nil, nil
     restore_env = {}
 
+    if `which ruby` =~ (/rvm/)
+      bin = "rvm system #{bin}"
+    end
+
     Thread.abort_on_exception = true
     Thread.new do
       ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
