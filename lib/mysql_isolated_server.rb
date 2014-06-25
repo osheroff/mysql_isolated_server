@@ -204,6 +204,9 @@ class MysqlIsolatedServer
     @pid = middle_pid
   end
 
+  def mysql_shell
+    system("mysql -uroot --port #{@port} mysql --host 127.0.0.1")
+  end
   def cleanup!
     system("rm -Rf #{base}")
   end
