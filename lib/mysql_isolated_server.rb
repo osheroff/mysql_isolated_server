@@ -34,7 +34,7 @@ class MysqlIsolatedServer
     if ENV['TRAVIS'] # oh how ugly
     end
     if `which ruby` =~ (/rvm/)
-      params = ["system", "do", bin] + params
+      params = ["system", "do", "ruby", bin] + params
       bin = 'rvm'
     end
 
