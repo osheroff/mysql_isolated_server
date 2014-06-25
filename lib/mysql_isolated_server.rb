@@ -32,6 +32,7 @@ class MysqlIsolatedServer
     restore_env = {}
 
     if `which ruby` =~ (/rvm/)
+      $stderr.puts(`which ruby`)
       bin = "rvm system #{bin}"
     end
 
