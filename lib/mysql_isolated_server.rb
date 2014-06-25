@@ -147,6 +147,7 @@ class MysqlIsolatedServer
         return candidate
       rescue Exception => e
         $stderr.puts(e)
+        $stderr.puts(e.backtrace)
       end
     end
   end
