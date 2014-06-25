@@ -34,7 +34,8 @@ class MysqlIsolatedServer
     if ENV['TRAVIS'] # oh how ugly
     end
     if `which ruby` =~ (/rvm/)
-      bin = (`which rvm`.chomp + " system #{bin}")
+      params = ["system", "do", bin] + params
+      bin = 'rvm'
     end
 
     Thread.abort_on_exception = true
@@ -42,7 +43,7 @@ class MysqlIsolatedServer
       ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
         restore_env[k] = ENV.delete(k)
       end
-      params = ["--pid", $$.to_s] + params
+      params = params + ["--pid", $$.to_s]
 
       pipe = IO.popen(["#{bin}"].concat(params), "r") do |pipe|
         mysql_dir = pipe.readline.split(' ').last
