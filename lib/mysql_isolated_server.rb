@@ -31,9 +31,11 @@ class MysqlIsolatedServer
     mysql_dir, mysql_port = nil, nil
     restore_env = {}
 
+    if ENV['TRAVIS'] # oh how ugly
+    end
     if `which ruby` =~ (/rvm/)
       $stderr.puts(`which ruby`)
-      bin = "rvm system #{bin}"
+      bin = "/usr/local/lib/rvm system #{bin}"
     end
 
     Thread.abort_on_exception = true
