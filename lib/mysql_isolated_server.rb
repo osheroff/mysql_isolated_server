@@ -141,7 +141,7 @@ class MysqlIsolatedServer
       candidate=9000 + rand(50_000)
 
       begin
-        socket = Socket.new(:INET, :STREAM, 0)
+        socket = Socket.new(:INET, :STREAM)
         socket.bind(Socket.pack_sockaddr_in(candidate, '127.0.0.1'))
         socket.close
         return candidate
