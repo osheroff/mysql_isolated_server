@@ -4,8 +4,6 @@ require 'rubygems'
 require 'mysql_isolated_server'
 require 'getoptlong'
 
-$stderr.puts RUBY_VERSION
-$stderr.puts RUBY_PLATFORM
 opts = GetoptLong.new(
   [ '--log-bin', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--pid', GetoptLong::REQUIRED_ARGUMENT ]
