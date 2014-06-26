@@ -27,18 +27,22 @@ class MysqlIsolatedServer
   end
 
   def self.thread_boot(*params)
-    bin = File.dirname(__FILE__) + "/../bin/boot_isolated_server"
+    bin = [File.dirname(__FILE__) + "/../bin/boot_isolated_server"]
     mysql_dir, mysql_port = nil, nil
     restore_env = {}
+
+    if `which ruby` =~ (/rvm/)
+      bin = ["rvm", "1.8.7", "do", "ruby"] + bin
+    end
+
+    params = ["--pid", $$.to_s] + params
 
     Thread.abort_on_exception = true
     Thread.new do
       ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
         restore_env[k] = ENV.delete(k)
       end
-      params = ["--pid", $$.to_s] + params
-
-      pipe = IO.popen(["#{bin}"].concat(params), "r") do |pipe|
+      pipe = IO.popen(bin + params, "r") do |pipe|
         mysql_dir = pipe.readline.split(' ').last
         mysql_port = pipe.readline.split(' ').last.to_i
         sleep
