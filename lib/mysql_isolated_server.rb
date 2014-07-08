@@ -194,21 +194,18 @@ class MysqlIsolatedServer
         end
       end
 
-
       while true
         begin
           Process.kill(0, parent_pid)
           Process.kill(0, mysql_pid)
         rescue Exception => e
-          Process.kill("KILL", mysql_pid) rescue nil
+          Process.kill("KILL", mysql_pid)
           cleanup!
           exit!
         end
 
         sleep 1
       end
-
-      at
     end
 
     @pid = middle_pid
@@ -223,6 +220,6 @@ class MysqlIsolatedServer
 
   def kill!
     return unless @pid
-    system("kill -KILL #{@pid}")
+    system("kill -TERM #{@pid}")
   end
 end
