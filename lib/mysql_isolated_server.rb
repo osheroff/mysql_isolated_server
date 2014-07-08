@@ -135,8 +135,14 @@ class MysqlIsolatedServer
 
     tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
     raise "could not find mysql_tzinfo_to_sql" unless tzinfo_to_sql
-    system("#{tzinfo_to_sql} /usr/share/zoneinfo 2>/dev/null | mysql -h127.0.0.1 --database=mysql --port=#{@port} -u root mysql ")
-    connection.query("SET GLOBAL time_zone='UTC'")
+    system("#{tzinfo_to_sql} /usr/share/zoneinfo 2>/dev/null| mysql -h127.0.0.1 --database=mysql --port=#{@port} -u root mysql ")
+
+    begin
+      connection.query("SET GLOBAL time_zone='UTC'")
+    rescue Mysql2::Error
+      connection.query("SET GLOBAL time_zone='UTC'")
+    end
+
     connection.query("SET GLOBAL server_id=#{@server_id}")
   end
 
