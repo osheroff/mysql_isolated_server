@@ -162,20 +162,14 @@ class MysqlIsolatedServer
   end
 
   attr_reader :pid
-  def exec_server(cmd)
-    cmd.strip!
-    cmd.gsub!(/\\\n/, ' ')
-    devnull = File.open("/dev/null", "w")
-    system("mkdir -p #{base}/tmp")
-    system("chmod 0777 #{base}/tmp")
+  def self.exec_wait(cmd, options = {})
+    allow_output = options[:allow_output] # default false
+    parent_pid = options[:parent_pid] || $$
 
-    parent_pid = @parent_pid || $$
-    mysql_pid = nil
-
-    middle_pid = fork do
-      mysql_pid = fork do
-        ENV["TMPDIR"] = "#{base}/tmp"
-        if !@allow_output
+    fork do
+      exec_pid = fork do
+        if !allow_output
+          devnull = File.open("/dev/null", "w")
           STDOUT.reopen(devnull)
           STDERR.reopen(devnull)
         end
@@ -188,8 +182,12 @@ class MysqlIsolatedServer
       #
       ["TERM", "INT"].each do |sig|
         trap(sig) do
-          Process.kill("KILL", mysql_pid) rescue nil
-          cleanup!
+          if block_given?
+            yield(exec_pid)
+          else
+            Process.kill("KILL", exec_pid)
+          end
+
           exit!
         end
       end
@@ -197,18 +195,36 @@ class MysqlIsolatedServer
       while true
         begin
           Process.kill(0, parent_pid)
-          Process.kill(0, mysql_pid)
+          Process.kill(0, exec_pid)
         rescue Exception => e
-          Process.kill("KILL", mysql_pid)
-          cleanup!
+          if block_given?
+            yield(exec_pid)
+          else
+            Process.kill("KILL", exec_pid)
+          end
+
           exit!
         end
 
         sleep 1
       end
     end
+  end
 
-    @pid = middle_pid
+  def exec_server(cmd)
+    cmd.strip!
+    cmd.gsub!(/\\\n/, ' ')
+    system("mkdir -p #{base}/tmp")
+    system("chmod 0777 #{base}/tmp")
+
+    parent_pid = @parent_pid || $$
+    mysql_pid = nil
+
+    ENV["TMPDIR"] = "#{base}/tmp"
+    @pid = MysqlIsolatedServer.exec_wait(cmd, allow_output: @allow_output, parent_pid: @parent_pid) do |mysql_pid|
+      Process.kill("KILL", mysql_pid)
+      cleanup!
+    end
   end
 
   def mysql_shell
