@@ -2,12 +2,12 @@ require 'tmpdir'
 require 'socket'
 
 if RUBY_PLATFORM == "java"
-  require 'mysql_isolated_server/jdbc_connection'
+  require 'isolated_server/jdbc_connection'
 else
-  require 'mysql_isolated_server/mysql2_connection'
+  require 'isolated_server/mysql2_connection'
 end
 
-class MysqlIsolatedServer
+class IsolatedServer
   include DBConnection
   attr_reader :pid, :base, :port
   attr_accessor :params
@@ -221,7 +221,7 @@ class MysqlIsolatedServer
     mysql_pid = nil
 
     ENV["TMPDIR"] = "#{base}/tmp"
-    @pid = MysqlIsolatedServer.exec_wait(cmd, allow_output: @allow_output, parent_pid: @parent_pid) do |mysql_pid|
+    @pid = IsolatedServer.exec_wait(cmd, allow_output: @allow_output, parent_pid: @parent_pid) do |mysql_pid|
       Process.kill("KILL", mysql_pid)
       cleanup!
     end

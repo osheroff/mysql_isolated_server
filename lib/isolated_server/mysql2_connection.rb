@@ -1,4 +1,4 @@
-class MysqlIsolatedServer
+class IsolatedServer
   module DBConnection
     def connection
       require 'mysql2'

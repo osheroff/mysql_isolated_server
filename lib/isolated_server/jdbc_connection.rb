@@ -2,7 +2,7 @@ require "java"
 java_import "java.sql.DriverManager"
 java_import "org.apache.commons.lang.StringEscapeUtils"
 
-class MysqlIsolatedServer
+class IsolatedServer
   class WrappedJDBCConnection
     def initialize(port)
       @cx ||= DriverManager.get_connection("jdbc:mysql://127.0.0.1:#{port}/mysql", "root", "")

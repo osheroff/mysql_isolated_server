@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'rubygems'
-require 'mysql_isolated_server'
+require 'isolated_server'
 require 'getoptlong'
 
 opts = GetoptLong.new(
@@ -21,9 +21,9 @@ end
 
 options[:params] = ARGV.join(' ')
 
-mysql_isolated_server = MysqlIsolatedServer.new(options)
-mysql_isolated_server.boot!
+isolated_server = IsolatedServer.new(options)
+isolated_server.boot!
 
-puts "dir: " + mysql_isolated_server.base
-puts "port: " + mysql_isolated_server.port.to_s
+puts "dir: " + isolated_server.base
+puts "port: " + isolated_server.port.to_s
 STDOUT.flush
