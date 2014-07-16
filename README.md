@@ -10,17 +10,17 @@ been useful in developement of a couple of other projects too (http://github.com
 ## Usage
 
 ```
-$mysql_master = IsolatedServer.new(allow_output: false)
+$mysql_master = IsolatedServer::Mysql.new(allow_output: false)
 $mysql_master.boot!
 
 puts "mysql master booted on port #{$mysql_master.port} -- access with mysql -uroot -h127.0.0.1 --port=#{$mysql_master.port} mysql"
 
-$mysql_slave = IsolatedServer.new
+$mysql_slave = IsolatedServer::Mysql.new
 $mysql_slave.boot!
 
 puts "mysql slave booted on port #{$mysql_slave.port} -- access with mysql -uroot -h127.0.0.1 --port=#{$mysql_slave.port} mysql"
 
-$mysql_slave_2 = IsolatedServer.new
+$mysql_slave_2 = IsolatedServer::Mysql.new
 $mysql_slave_2.boot!
 
 puts "mysql chained slave booted on port #{$mysql_slave_2.port} -- access with mysql -uroot -h127.0.0.1 --port=#{$mysql_slave_2.port} mysql"

@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'rubygems'
 require 'isolated_server'
@@ -21,7 +21,7 @@ end
 
 options[:params] = ARGV.join(' ')
 
-isolated_server = IsolatedServer.new(options)
+isolated_server = IsolatedServer::Mysql.new(options)
 isolated_server.boot!
 
 puts "dir: " + isolated_server.base
