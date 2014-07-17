@@ -13,9 +13,7 @@ module IsolatedServer
 
     def down!
       Process.kill("TERM", @pid)
-      while (Process.kill 0, @pid rescue false)
-        sleep 1
-      end
+      Process.wait
       @cx = nil
     end
 
