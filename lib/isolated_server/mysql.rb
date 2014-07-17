@@ -11,6 +11,8 @@ module IsolatedServer
 
     include DBConnection
 
+    attr_reader :server_id, :mysql_data_dir
+
     def initialize(options = {})
       @base           = options[:base] || Dir.mktmpdir("mysql_isolated", "/tmp")
       @mysql_data_dir = "#{@base}/mysqld"
