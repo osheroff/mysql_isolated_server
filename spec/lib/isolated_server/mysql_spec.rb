@@ -6,6 +6,7 @@ describe IsolatedServer::Mysql do
     it "starts up a new server" do
       subject.boot!
       expect(subject.pid).to be_a_running_process
+      expect(subject).to be_up
 
       # Make sure we are connected, queryable, and reasonably confident that global variables match our expectations
       expect(query_mysql_global_variable(subject, 'port').to_i).to          eq(subject.port)
@@ -20,6 +21,7 @@ describe IsolatedServer::Mysql do
 
       subject.down!
       expect(subject.pid).not_to be_a_running_process
+      expect(subject).not_to be_up
     end
   end
 

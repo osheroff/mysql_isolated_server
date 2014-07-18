@@ -6,7 +6,7 @@ module IsolatedServer
     attr_accessor :params
 
     def initialize(options)
-      @base         = options[:base] || Dir.mktmpdir("mysql_isolated", "/tmp")
+      @base         = options[:base] || Dir.mktmpdir("isolated", "/tmp")
       @params       = options[:params]
       @port         = options[:port]
       @allow_output = options[:allow_output]
@@ -14,7 +14,7 @@ module IsolatedServer
     end
 
     def locate_executable(*candidates)
-      output = `which #{candidates.join(' ')}`
+      output = `which #{candidates.shelljoin}`
       raise "I couldn't find any of these: #{candidates.join(',')} in $PATH" if output.chomp.empty?
       output.split("\n").first
     end
@@ -27,11 +27,11 @@ module IsolatedServer
 
     def kill!
       return unless @pid
-      system("kill -TERM #{@pid}")
+      Process.kill("TERM", @pid)
     end
 
     def cleanup!
-      system("rm -Rf #{base}")
+      system("rm -Rf #{base.shellescape}")
     end
 
     include Socket::Constants
