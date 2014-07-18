@@ -84,11 +84,11 @@ module IsolatedServer
     end
 
     def up?
-      system("mysql -h127.0.0.1 --port=#{@port} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
+      system("mysql -h127.0.0.1 --port=#{@port.to_s.shellescape} --database=mysql -u root -e 'select 1' >/dev/null 2>&1")
     end
 
     def console
-      system("mysql -uroot --port #{@port} mysql --host 127.0.0.1")
+      system("mysql -uroot --port #{@port.to_s.shellescape} mysql --host 127.0.0.1")
     end
 
     def make_slave_of(master)
@@ -122,8 +122,8 @@ module IsolatedServer
         mysql_install_db = locate_executable("mysql_install_db")
 
         idb_path = File.dirname(mysql_install_db)
-        system("(cd #{idb_path}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --user=`whoami`) >/dev/null 2>&1")
-        system("cp #{File.expand_path(File.dirname(__FILE__))}/mysql/tables/user.* #{@mysql_data_dir.shellescape}/mysql")
+        system("(cd #{idb_path.shellescape}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --user=`whoami`) >/dev/null 2>&1")
+        system("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/user.* #{@mysql_data_dir.shellescape}/mysql")
       end
     end
 
