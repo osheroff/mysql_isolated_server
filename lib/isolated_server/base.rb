@@ -44,7 +44,7 @@ module IsolatedServer
           socket.bind(Socket.pack_sockaddr_in(candidate, '127.0.0.1'))
           socket.close
           return candidate
-        rescue Exception => e
+        rescue Exception
         end
       end
     end
@@ -83,7 +83,7 @@ module IsolatedServer
           begin
             Process.kill(0, parent_pid)
             Process.kill(0, exec_pid)
-          rescue Exception => e
+          rescue Exception
             if block_given?
               yield(exec_pid)
             else

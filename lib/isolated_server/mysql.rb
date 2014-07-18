@@ -40,7 +40,7 @@ module IsolatedServer
         ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
           restore_env[k] = ENV.delete(k)
         end
-        pipe = IO.popen(bin + params, "r") do |pipe|
+        IO.popen(bin + params, "r") do |pipe|
           mysql_dir = pipe.readline.split(' ').last
           mysql_port = pipe.readline.split(' ').last.to_i
           sleep
