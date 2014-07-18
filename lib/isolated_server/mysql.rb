@@ -14,15 +14,11 @@ module IsolatedServer
     attr_reader :server_id, :mysql_data_dir
 
     def initialize(options = {})
-      @base           = options[:base] || Dir.mktmpdir("mysql_isolated", "/tmp")
+      super options
       @mysql_data_dir = "#{@base}/mysqld"
       @mysql_socket   = "#{@mysql_data_dir}/mysqld.sock"
-      @params         = options[:params]
       @load_data_path = options[:data_path]
-      @port           = options[:port]
-      @allow_output   = options[:allow_output]
       @log_bin        = options[:log_bin] || "--log-bin"
-      @parent_pid     = options[:pid]
       @server_id      = rand(2**31)
     end
 

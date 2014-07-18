@@ -5,6 +5,14 @@ module IsolatedServer
     attr_reader :pid, :base, :port
     attr_accessor :params
 
+    def initialize(options)
+      @base         = options[:base] || Dir.mktmpdir("mysql_isolated", "/tmp")
+      @params       = options[:params]
+      @port         = options[:port]
+      @allow_output = options[:allow_output]
+      @parent_pid   = options[:pid]
+    end
+
     def locate_executable(*candidates)
       output = `which #{candidates.join(' ')}`
       raise "I couldn't find any of these: #{candidates.join(',')} in $PATH" if output.chomp.empty?
