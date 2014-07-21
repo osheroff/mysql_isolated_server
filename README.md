@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gabetax/isolated_server.svg?branch=master)](https://travis-ci.org/gabetax/isolated_server)
+
 # Mysql Isolated Servers -- a gem for testing mysql stuff
 
 This gem provides functionality to quickly bring up and tear down mysql instances for the 
