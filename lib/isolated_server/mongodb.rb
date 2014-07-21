@@ -41,7 +41,17 @@ module IsolatedServer
     end
 
     def connection
-      @connection ||= Mongo::MongoClient.new('localhost', @port)
+      @connection ||= connection_klass.new('localhost', @port)
+    end
+
+    def connection_klass
+      if Kernel.const_defined?("Mongo::MongoClient")
+        # 1.8.0+
+        Mongo::MongoClient
+      else
+        # < 1.8.0
+        Mongo::Connection
+      end
     end
 
     def console
