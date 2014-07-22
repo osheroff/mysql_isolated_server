@@ -1,4 +1,3 @@
-require 'pry'
 require 'isolated_server/base'
 require 'isolated_server/version'
 

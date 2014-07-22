@@ -1,4 +1,7 @@
 language: ruby
+gemfile:
+  - gemfiles/mongo_1.7.gemfile
+  - gemfiles/mongo_latest.gemfile
 rvm:
   - 2.1.1
   - 2.1.2
