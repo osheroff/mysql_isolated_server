@@ -9,7 +9,7 @@ end
 
 class MysqlIsolatedServer
   include DBConnection
-  attr_reader :pid, :base, :port
+  attr_reader :pid, :base, :port, :initial_binlog_file, :initial_binlog_pos
   attr_accessor :params
   MYSQL_BASE_DIR="/usr"
 
@@ -56,13 +56,15 @@ class MysqlIsolatedServer
   end
 
   def make_slave_of(master)
-    master_binlog_info = master.connection.query("show master status").first
+    binlog_file = master.initial_binlog_file || (@log_bin.split('/').last + ".000001")
+    binlog_pos = master.initial_binlog_pos || 106
+
     connection.query(<<-EOL
       change master to master_host='127.0.0.1',
                        master_port=#{master.port},
                        master_user='root', master_password='',
-                       master_log_file='#{master_binlog_info['File']}',
-                       master_log_pos=#{master_binlog_info['Position']}
+                       master_log_file='#{binlog_file}',
+                       master_log_pos=#{binlog_pos}
       EOL
     )
     connection.query("SLAVE START")
@@ -132,6 +134,9 @@ class MysqlIsolatedServer
     end
 
     up!
+
+    master_binlog_info = connection.query("show master status").first
+    @initial_binlog_file, @initial_binlog_pos = master_binlog_info.values_at('File', 'Position')
 
     tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
     raise "could not find mysql_tzinfo_to_sql" unless tzinfo_to_sql
