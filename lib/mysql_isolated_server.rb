@@ -57,7 +57,7 @@ class MysqlIsolatedServer
 
   def make_slave_of(master)
     binlog_file = master.initial_binlog_file || (@log_bin.split('/').last + ".000001")
-    binlog_pos = master.initial_binlog_pos || 106
+    binlog_pos = master.initial_binlog_pos || 4
 
     connection.query(<<-EOL
       change master to master_host='127.0.0.1',
