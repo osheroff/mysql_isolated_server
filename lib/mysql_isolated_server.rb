@@ -243,4 +243,9 @@ class MysqlIsolatedServer
     return unless @pid
     system("kill -TERM #{@pid}")
   end
+
+  def reconnect!
+    @cx = nil
+    connection
+  end
 end

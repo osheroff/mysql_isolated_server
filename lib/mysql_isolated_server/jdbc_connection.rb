@@ -44,7 +44,7 @@ class MysqlIsolatedServer
 
   module DBConnection
     def connection
-      @connection ||= WrappedJDBCConnection.new(@port)
+      @cx ||= WrappedJDBCConnection.new(@port)
     end
   end
 end
