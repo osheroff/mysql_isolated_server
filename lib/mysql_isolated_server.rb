@@ -98,8 +98,9 @@ class MysqlIsolatedServer
   end
 
   def down!
-    Process.kill("TERM", @pid)
+    Process.kill("HUP", @pid)
     while (Process.kill 0, @pid rescue false)
+      Process.waitpid(@pid)
       sleep 1
     end
     @cx = nil
@@ -195,6 +196,12 @@ class MysqlIsolatedServer
 
           exit!
         end
+      end
+
+      # HUP == don't cleanup.
+      trap("HUP") do
+        Process.kill("KILL", exec_pid)
+        exit!
       end
 
       while true
