@@ -20,7 +20,7 @@ module IsolatedServer
     end
 
     def down!
-      Process.kill("TERM", @pid)
+      Process.kill("HUP", @pid)
       Process.wait
       @cx = nil
     end
@@ -77,6 +77,12 @@ module IsolatedServer
 
             exit!
           end
+        end
+
+        # HUP == down, but don't cleanup.
+        trap("HUP") do
+          Process.kill("KILL", exec_pid)
+          exit!
         end
 
         while true
