@@ -43,7 +43,8 @@ describe IsolatedServer::Mysql do
       master.connection.select_db(db_name)
       master.connection.query(create_table_sql)
       master.connection.query("INSERT INTO people SET name = '#{person_name}'")
-      sleep 0.1
+
+      sleep 3
 
       slave.connection.select_db(db_name)
       slave_result = slave.connection.query('SELECT name FROM people').first
