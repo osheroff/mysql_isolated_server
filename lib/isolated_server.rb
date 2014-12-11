@@ -1,5 +1,6 @@
 require 'isolated_server/base'
 require 'isolated_server/version'
+require 'shellwords'
 
 # Load support for databases if their corresponding gem is available
 begin
