@@ -1,3 +1,5 @@
+require 'isolated_server'
+
 if RUBY_PLATFORM == "java"
   require 'isolated_server/mysql/jdbc_connection'
 else
@@ -11,7 +13,7 @@ module IsolatedServer
 
     include DBConnection
 
-    attr_reader :server_id, :mysql_data_dir
+    attr_reader :server_id, :mysql_data_dir, :initial_binlog_file, :initial_binlog_pos
 
     def initialize(options = {})
       super options
@@ -62,6 +64,8 @@ module IsolatedServer
 
       up!
 
+      record_initial_master_position
+
       setup_time_zone
       setup_server_id
     end
@@ -91,14 +95,21 @@ module IsolatedServer
       system("mysql -uroot --port #{@port.to_s.shellescape} mysql --host 127.0.0.1")
     end
 
+    def reconnect!
+      @cx = nil
+      connection
+    end
+
     def make_slave_of(master)
-      master_binlog_info = master.connection.query("SHOW MASTER STATUS").first
+      binlog_file = master.initial_binlog_file || (@log_bin.split('/').last + ".000001")
+      binlog_pos = master.initial_binlog_pos || 4
+
       connection.query(<<-EOL
         CHANGE MASTER TO MASTER_HOST='127.0.0.1',
                          MASTER_PORT=#{master.port},
                          MASTER_USER='root', MASTER_PASSWORD='',
-                         MASTER_LOG_FILE='#{master_binlog_info['File']}',
-                         MASTER_LOG_POS=#{master_binlog_info['Position']}
+                         MASTER_LOG_FILE='#{binlog_file}',
+                         MASTER_LOG_POS=#{binlog_pos}
         EOL
       )
       connection.query("SLAVE START")
@@ -164,6 +175,11 @@ module IsolatedServer
 
     def setup_server_id
       connection.query("SET GLOBAL server_id=#{@server_id}")
+    end
+
+    def record_initial_master_position
+      master_binlog_info = connection.query("show master status").first
+      @initial_binlog_file, @initial_binlog_pos = master_binlog_info.values_at('File', 'Position')
     end
   end
 end

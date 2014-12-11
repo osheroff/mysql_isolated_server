@@ -45,7 +45,7 @@ module IsolatedServer
 
     module DBConnection
       def connection
-        @connection ||= WrappedJDBCConnection.new(@port)
+        @cx ||= WrappedJDBCConnection.new(@port)
       end
     end
   end
