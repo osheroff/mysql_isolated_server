@@ -1,5 +1,3 @@
-require 'isolated_server'
-
 if RUBY_PLATFORM == "java"
   require 'isolated_server/mysql/jdbc_connection'
 else
