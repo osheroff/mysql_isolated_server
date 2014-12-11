@@ -37,7 +37,7 @@ describe IsolatedServer::Mysql do
 
       slave.make_slave_of(master)
       sleep 0.1
-      expect(slave_status(slave)['Slave_IO_State']).to eq("Waiting for master to send event")
+      expect(slave_status(slave)['Slave_IO_State']).to match("master")
 
       master.connection.query("CREATE DATABASE #{db_name}")
       master.connection.select_db(db_name)
