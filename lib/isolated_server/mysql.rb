@@ -93,6 +93,11 @@ module IsolatedServer
       system("mysql -uroot --port #{@port.to_s.shellescape} mysql --host 127.0.0.1")
     end
 
+    def reconnect!
+      @cx = nil
+      connection
+    end
+
     def make_slave_of(master)
       binlog_file = master.initial_binlog_file || (@log_bin.split('/').last + ".000001")
       binlog_pos = master.initial_binlog_pos || 4
