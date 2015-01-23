@@ -59,6 +59,8 @@ module IsolatedServer
             devnull = File.open("/dev/null", "w")
             STDOUT.reopen(devnull)
             STDERR.reopen(devnull)
+          else
+            $stderr.puts("executing #{cmd}")
           end
 
           exec(cmd)

@@ -18,7 +18,7 @@ module IsolatedServer
       @mysql_data_dir = "#{@base}/mysqld"
       @mysql_socket   = "#{@mysql_data_dir}/mysqld.sock"
       @load_data_path = options[:data_path]
-      @log_bin        = options[:log_bin] || "--log-bin"
+      @log_bin        = options[:log_bin]
       @server_id      = rand(2**31)
     end
 
@@ -28,24 +28,7 @@ module IsolatedServer
       bin = [File.dirname(__FILE__) + "/../../bin/boot_isolated_mysql_server"]
       mysql_dir, mysql_port = nil, nil
 
-      if `which ruby` =~ /rvm/
-        bin = ["rvm", "1.8.7", "do", "ruby"] + bin
-      elsif `which ruby` =~ /rbenv/
-        versions = `rbenv versions`.split(/\n/).map(&:strip)
-        mri_version = versions.reject { |v| v =~ /jruby/ }.last
-        raise "can't use thread_boot without a MRI ruby.  sorry." unless mri_version
-
-        ENV['RBENV_VERSION'] = mri_version
-        ENV['PATH'] = ENV['PATH'].split(":").reject { |p| p =~/jruby/ }.join(":")
-      end
-
-      params = ["--pid", $$.to_s] + params
-
-      Thread.abort_on_exception = true
       Thread.new do
-        ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
-          ENV.delete(k)
-        end
         IO.popen(bin + params, "r") do |pipe|
           mysql_dir = pipe.readline.split(' ').last
           mysql_port = pipe.readline.split(' ').last.to_i

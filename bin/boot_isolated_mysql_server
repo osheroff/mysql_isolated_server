@@ -1,4 +1,26 @@
 #!/usr/bin/env ruby
+
+if RUBY_PLATFORM == "java"
+  bin = [__FILE__, *ARGV]
+  if `which ruby` =~ /rvm/
+    bin = ["rvm", "1.8.7", "do", "ruby"] + bin
+  elsif `which ruby` =~ /rbenv/
+    versions = `rbenv versions`.split(/\n/).map(&:strip)
+    mri_version = versions.reject { |v| v =~ /jruby/ }.last
+    raise "can't use thread_boot without a MRI ruby.  sorry." unless mri_version
+
+    ENV['RBENV_VERSION'] = mri_version
+    ENV['PATH'] = ENV['PATH'].split(":").reject { |p| p =~/jruby/ }.join(":")
+  end
+
+  # bundler does a number on the environment.  hard to get out of!
+  ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
+    ENV.delete(k)
+  end
+  exec *bin
+end
+
+
 $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'rubygems'
 require 'isolated_server'
@@ -20,11 +42,17 @@ opts.each do |opt, arg|
     end
 end
 
-options[:params] = ARGV.join(' ')
+if !options[:pid]
+  options[:pid] = Process.ppid
+end
 
-isolated_server = IsolatedServer::Mysql.new(options)
+options[:params] = ARGV
+
+isolated_server = IsolatedServer::Mysql.new(options.merge(allow_output: true))
 isolated_server.boot!
 
 puts "dir: " + isolated_server.base
 puts "port: " + isolated_server.port.to_s
 STDOUT.flush
+
+sleep
