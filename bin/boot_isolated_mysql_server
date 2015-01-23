@@ -2,6 +2,7 @@
 $LOAD_PATH << File.dirname(__FILE__) + "/../lib"
 require 'rubygems'
 require 'isolated_server'
+require 'isolated_server/mysql'
 require 'getoptlong'
 
 opts = GetoptLong.new(

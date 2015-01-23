@@ -25,12 +25,18 @@ module IsolatedServer
     # For JRuby
     # @todo Extract and genericize more of this into `Base`
     def self.thread_boot(*params)
-      bin = [File.dirname(__FILE__) + "/../bin/boot_isolated_mysql_server"]
+      bin = [File.dirname(__FILE__) + "/../../bin/boot_isolated_mysql_server"]
       mysql_dir, mysql_port = nil, nil
-      restore_env = {}
 
-      if `which ruby` =~ (/rvm/)
+      if `which ruby` =~ /rvm/
         bin = ["rvm", "1.8.7", "do", "ruby"] + bin
+      elsif `which ruby` =~ /rbenv/
+        versions = `rbenv versions`.split(/\n/).map(&:strip)
+        mri_version = versions.reject { |v| v =~ /jruby/ }.last
+        raise "can't use thread_boot without a MRI ruby.  sorry." unless mri_version
+
+        ENV['RBENV_VERSION'] = mri_version
+        ENV['PATH'] = ENV['PATH'].split(":").reject { |p| p =~/jruby/ }.join(":")
       end
 
       params = ["--pid", $$.to_s] + params
@@ -38,7 +44,7 @@ module IsolatedServer
       Thread.abort_on_exception = true
       Thread.new do
         ENV.keys.grep(/GEM|BUNDLE|RUBYOPT/).each do |k|
-          restore_env[k] = ENV.delete(k)
+          ENV.delete(k)
         end
         IO.popen(bin + params, "r") do |pipe|
           mysql_dir = pipe.readline.split(' ').last

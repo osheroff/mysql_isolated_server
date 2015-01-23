@@ -1,6 +1,5 @@
 require "java"
 java_import "java.sql.DriverManager"
-java_import "org.apache.commons.lang.StringEscapeUtils"
 
 module IsolatedServer
   class Mysql < Base
@@ -39,7 +38,7 @@ module IsolatedServer
       end
 
       def escape(str)
-        StringEscapeUtils.escapeSql(str)
+        str.gsub(/'/, "\\'").encode('utf-8')
       end
     end
 
