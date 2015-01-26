@@ -20,6 +20,9 @@ describe IsolatedServer::Mysql do
         to('ON')
 
       subject.down!
+
+      sleep 0.1
+
       expect(subject.pid).not_to be_a_running_process
       expect(subject).not_to be_up
     end
