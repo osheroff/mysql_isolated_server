@@ -53,6 +53,7 @@ isolated_server.boot!
 
 puts "dir: " + isolated_server.base
 puts "port: " + isolated_server.port.to_s
+puts "UP."
 STDOUT.flush
 
-sleep
+
