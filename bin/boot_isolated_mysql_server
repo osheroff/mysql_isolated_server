@@ -48,7 +48,7 @@ end
 
 options[:params] = ARGV
 
-isolated_server = IsolatedServer::Mysql.new(options.merge(allow_output: true))
+isolated_server = IsolatedServer::Mysql.new(options.merge(:allow_output => true))
 isolated_server.boot!
 
 puts "dir: " + isolated_server.base
