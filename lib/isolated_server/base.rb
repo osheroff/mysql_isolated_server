@@ -55,6 +55,12 @@ module IsolatedServer
 
       fork do
         exec_pid = fork do
+          [[$stdin, :stdin], [$stdout, :stdout], [$stderr, :stderr]].each do |file, symbol|
+            if options[symbol]
+              file.reopen(options[symbol])
+            end
+          end
+
           if !allow_output
             devnull = File.open("/dev/null", "w")
             STDOUT.reopen(devnull)
