@@ -35,7 +35,12 @@ module IsolatedServer
     end
 
     include Socket::Constants
+
     def grab_free_port
+      self.class.get_free_port
+    end
+
+    def self.get_free_port
       while true
         candidate=9000 + rand(50_000)
 
