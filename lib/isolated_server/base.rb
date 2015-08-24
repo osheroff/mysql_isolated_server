@@ -61,7 +61,7 @@ module IsolatedServer
             STDERR.reopen(devnull)
           end
 
-          exec(cmd)
+          exec(*cmd)
         end
 
         # begin waiting for the parent (or mysql) to die; at_exit is hard to control when interacting with test/unit
@@ -105,9 +105,6 @@ module IsolatedServer
     end
 
     def exec_server(cmd)
-      cmd.strip!
-      cmd.gsub!(/\\\n/, ' ')
-
       @pid = self.class.exec_wait(cmd, allow_output: @allow_output, parent_pid: @parent_pid) do |child_pid|
         Process.kill("KILL", child_pid)
         cleanup!

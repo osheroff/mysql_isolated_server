@@ -24,7 +24,7 @@ module IsolatedServer
         '--dbpath', @dbpath,
         '--port', @port,
         *@params
-      ].shelljoin)
+      ])
 
       until up?
         sleep(0.1)

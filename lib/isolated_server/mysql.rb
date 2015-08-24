@@ -80,7 +80,7 @@ module IsolatedServer
         @log_bin,
         '--log-slave-updates',
         *@params
-      ].shelljoin)
+      ])
 
       sleep(0.1) until up?
     end
