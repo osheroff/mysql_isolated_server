@@ -61,7 +61,7 @@ module IsolatedServer
             STDERR.reopen(devnull)
           end
 
-          exec(*cmd)
+          exec(cmd)
         end
 
         # begin waiting for the parent (or mysql) to die; at_exit is hard to control when interacting with test/unit
