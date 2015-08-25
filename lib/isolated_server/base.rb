@@ -35,7 +35,12 @@ module IsolatedServer
     end
 
     include Socket::Constants
+
     def grab_free_port
+      self.class.get_free_port
+    end
+
+    def self.get_free_port
       while true
         candidate=9000 + rand(50_000)
 
@@ -55,6 +60,12 @@ module IsolatedServer
 
       fork do
         exec_pid = fork do
+          [[$stdin, :stdin], [$stdout, :stdout], [$stderr, :stderr]].each do |file, symbol|
+            if options[symbol]
+              file.reopen(options[symbol])
+            end
+          end
+
           if !allow_output
             devnull = File.open("/dev/null", "w")
             STDOUT.reopen(devnull)
