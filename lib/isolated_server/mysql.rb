@@ -110,7 +110,7 @@ module IsolatedServer
                          MASTER_LOG_POS=#{binlog_pos}
         EOL
       )
-      connection.query("SLAVE START")
+      connection.query("START SLAVE")
       connection.query("SET GLOBAL READ_ONLY=1")
     end
 
