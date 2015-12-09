@@ -129,8 +129,8 @@ module IsolatedServer
         system("rm -f #{@mysql_data_dir.shellescape}/relay-log.info")
       else
         mysqld = locate_executable("mysqld")
-        `#{mysqld} --version` =~ /^mysqld\s+Ver (5\.\d)\.\d+/
-        major_version = $1
+        `#{mysqld} --version` =~ /mysqld\s+Ver (5\.\d)\.\d+/
+        major_version = $1 || '5.5'
 
         mysql_install_db = locate_executable("mysql_install_db")
 
