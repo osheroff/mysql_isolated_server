@@ -128,11 +128,15 @@ module IsolatedServer
         system("cp -a #{@load_data_path.shellescape}/* #{@mysql_data_dir.shellescape}")
         system("rm -f #{@mysql_data_dir.shellescape}/relay-log.info")
       else
+        mysqld = locate_executable("mysqld")
+        `#{mysqld} --version` =~ /^mysqld\s+Ver (5\.\d)\.\d+/
+        major_version = $1
+
         mysql_install_db = locate_executable("mysql_install_db")
 
         idb_path = File.dirname(mysql_install_db)
         system("(cd #{idb_path.shellescape}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --user=`whoami`) >/dev/null 2>&1")
-        system("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/user.* #{@mysql_data_dir.shellescape}/mysql")
+        system("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/#{major_version}/user.* #{@mysql_data_dir.shellescape}/mysql")
       end
     end
 
