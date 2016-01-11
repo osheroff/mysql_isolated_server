@@ -4,7 +4,6 @@
 .config
 .yardoc
 Gemfile.lock
-gemfiles/*.gemfile.lock
 InstalledFiles
 _yardoc
 coverage
