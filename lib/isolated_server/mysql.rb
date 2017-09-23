@@ -77,6 +77,7 @@ module IsolatedServer
         "--pid-file=#{@base}/mysqld.pid",
         "--port=#{@port}",
         "--socket=#{@mysql_data_dir}/mysql.sock",
+        "--server-id=#{@port}",
         @log_bin,
         '--log-slave-updates',
         *@params
@@ -90,7 +91,7 @@ module IsolatedServer
     end
 
     def console
-      system("mysql -uroot --port #{@port.to_s.shellescape} mysql --host 127.0.0.1")
+      system!("mysql -uroot --port #{@port.to_s.shellescape} mysql --host 127.0.0.1")
     end
 
     def reconnect!
@@ -121,18 +122,29 @@ module IsolatedServer
 
     private
 
+    def system!(cmd)
+      system(cmd) or raise Exception, "Error executing #{cmd}"
+    end
+
     def setup_data_dir
-      system("rm -Rf #{@mysql_data_dir.shellescape}")
-      system("mkdir #{@mysql_data_dir.shellescape}")
+      system!("rm -Rf #{@mysql_data_dir.shellescape}")
+      system!("mkdir -p #{@mysql_data_dir.shellescape}")
       if @load_data_path
-        system("cp -a #{@load_data_path.shellescape}/* #{@mysql_data_dir.shellescape}")
-        system("rm -f #{@mysql_data_dir.shellescape}/relay-log.info")
+        system!("cp -a #{@load_data_path.shellescape}/* #{@mysql_data_dir.shellescape}")
+        system!("rm -f #{@mysql_data_dir.shellescape}/relay-log.info")
       else
+        mysqld = locate_executable("mysqld")
+        `#{mysqld} --version` =~ /mysqld\s+Ver (5\.\d)\.\d+/
+        major_version = $1 || '5.5'
+
+        `#{mysqld} --no-defaults --verbose --help` =~ /^basedir\s+(.*)$/
+        basedir = $1
+
         mysql_install_db = locate_executable("mysql_install_db")
 
         idb_path = File.dirname(mysql_install_db)
-        system("(cd #{idb_path.shellescape}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --user=`whoami`) >/dev/null 2>&1")
-        system("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/user.* #{@mysql_data_dir.shellescape}/mysql")
+        system!("(cd #{idb_path.shellescape}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --basedir=#{basedir.shellescape} --user=`whoami`) >/dev/null 2>&1")
+        system!("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/#{major_version}/user.* #{@mysql_data_dir.shellescape}/mysql")
       end
     end
 
@@ -146,15 +158,15 @@ module IsolatedServer
           binlog_dir = @log_bin
         end
 
-        system("mkdir -p #{binlog_dir.shellescape}")
+        system!("mkdir -p #{binlog_dir.shellescape}")
         @log_bin = "--log-bin=#{binlog_dir}"
       end
     end
 
     # http://dev.mysql.com/doc/refman/5.0/en/temporary-files.html
     def setup_tmp_dir
-      system("mkdir -p #{base.shellescape}/tmp")
-      system("chmod 0777 #{base.shellescape}/tmp")
+      system!("mkdir -p #{base.shellescape}/tmp")
+      system!("chmod 0777 #{base.shellescape}/tmp")
       ENV["TMPDIR"] = "#{base.shellescape}/tmp"
     end
 
@@ -162,7 +174,7 @@ module IsolatedServer
     def setup_time_zone
       tzinfo_to_sql = locate_executable("mysql_tzinfo_to_sql5", "mysql_tzinfo_to_sql")
       raise "could not find mysql_tzinfo_to_sql" unless tzinfo_to_sql
-      system("#{tzinfo_to_sql.shellescape} /usr/share/zoneinfo 2>/dev/null | mysql -h127.0.0.1 --database=mysql --port=#{@port.to_s.shellescape} -u root mysql")
+      system!("#{tzinfo_to_sql.shellescape} /usr/share/zoneinfo 2>/dev/null | mysql -h127.0.0.1 --database=mysql --port=#{@port.to_s.shellescape} -u root mysql")
 
       begin
         connection.query("SET GLOBAL time_zone='UTC'")
