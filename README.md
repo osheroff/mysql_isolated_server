@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/gabetax/isolated_server.svg?branch=master)](https://travis-ci.org/gabetax/isolated_server)
+[![Build Status](https://travis-ci.org/zendesk/isolated_server.svg?branch=master)](https://travis-ci.org/zendesk/isolated_server)
 
 # Mysql Isolated Servers -- a gem for testing mysql stuff
 
