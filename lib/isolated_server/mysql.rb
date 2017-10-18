@@ -5,6 +5,8 @@ else
 end
 
 require 'tmpdir'
+require 'open3'
+require 'fileutils'
 
 module IsolatedServer
   class Mysql < Base
@@ -123,12 +125,13 @@ module IsolatedServer
     private
 
     def system!(cmd)
-      system(cmd) or raise Exception, "Error executing #{cmd}"
+      stdout, stderr, status = Open3.capture3(cmd)
+      raise Exception, "Error executing #{cmd} status=#{status} stdout=#{stdout} stderr=#{stderr}" if status != 0
     end
 
     def setup_data_dir
       system!("rm -Rf #{@mysql_data_dir.shellescape}")
-      system!("mkdir -p #{@mysql_data_dir.shellescape}")
+      FileUtils.mkdir_p(@mysql_data_dir)
       if @load_data_path
         system!("cp -a #{@load_data_path.shellescape}/* #{@mysql_data_dir.shellescape}")
         system!("rm -f #{@mysql_data_dir.shellescape}/relay-log.info")
@@ -143,7 +146,7 @@ module IsolatedServer
         mysql_install_db = locate_executable("mysql_install_db")
 
         idb_path = File.dirname(mysql_install_db)
-        system!("(cd #{idb_path.shellescape}/..; mysql_install_db --datadir=#{@mysql_data_dir.shellescape} --basedir=#{basedir.shellescape} --user=`whoami`) >/dev/null 2>&1")
+        system!("#{mysql_install_db} --datadir=#{@mysql_data_dir.shellescape} --basedir=#{basedir.shellescape} --user=`whoami`")
         system!("cp #{File.expand_path(File.dirname(__FILE__)).shellescape}/mysql/tables/#{major_version}/user.* #{@mysql_data_dir.shellescape}/mysql")
       end
     end
@@ -158,16 +161,17 @@ module IsolatedServer
           binlog_dir = @log_bin
         end
 
-        system!("mkdir -p #{binlog_dir.shellescape}")
+        FileUtils.mkdir_p(binlog_dir)
         @log_bin = "--log-bin=#{binlog_dir}"
       end
     end
 
     # http://dev.mysql.com/doc/refman/5.0/en/temporary-files.html
     def setup_tmp_dir
-      system!("mkdir -p #{base.shellescape}/tmp")
-      system!("chmod 0777 #{base.shellescape}/tmp")
-      ENV["TMPDIR"] = "#{base.shellescape}/tmp"
+      tmp_dir = File.join(base, "tmp")
+      FileUtils.mkdir_p(tmp_dir)
+      system!("chmod 0777 #{tmp_dir.shellescape}")
+      ENV["TMPDIR"] = "#{tmp_dir.shellescape}"
     end
 
     # http://dev.mysql.com/doc/refman/5.5/en/mysql-tzinfo-to-sql.html
