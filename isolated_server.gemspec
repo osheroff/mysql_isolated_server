@@ -12,6 +12,8 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{A small library that allows you to easily spin up new local mysql servers for testing purposes.}
   spec.homepage      = "http://github.com/gabetax/isolated_server"
 
+  spec.metadata['allowed_push_host'] = "https://zdrepo.jfrog.io/zdrepo/api/gems/gems-local/"
+
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
@@ -21,4 +23,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "pry"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "private_gem"
+  spec.add_development_dependency "bump"
 end
